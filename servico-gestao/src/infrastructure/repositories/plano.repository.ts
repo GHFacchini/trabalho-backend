@@ -4,7 +4,7 @@ import { Plano } from '../../domain/entities/plano.entity.js';
 
 @Injectable()
 export class PlanoRepository implements IPlanoRepository {
-  // arrayzinho simulando a tabela de planos
+  // Array simulando a persistência de planos
   private planos: Plano[] = [];
 
   async listarTodos(): Promise<Plano[]> {
@@ -19,7 +19,7 @@ export class PlanoRepository implements IPlanoRepository {
   async atualizarCustoMensal(codigo: number, custoMensal: number): Promise<Plano> {
     const plano = await this.buscarPorCodigo(codigo);
     if (!plano) {
-      // deu ruim, não achou o plano
+      // Lança exceção se o plano não for encontrado
       throw new NotFoundException('Plano não encontrado');
     }
     plano.custoMensal = custoMensal;

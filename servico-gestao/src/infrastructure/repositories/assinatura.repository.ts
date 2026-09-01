@@ -4,18 +4,18 @@ import { Assinatura } from '../../domain/entities/assinatura.entity.js';
 
 @Injectable()
 export class AssinaturaRepository implements IAssinaturaRepository {
-  // nossa "tabela" de assinaturas
+  // Array simulando a persistência de assinaturas
   private assinaturas: Assinatura[] = [];
   private nextId = 1;
 
   async criar(assinatura: Partial<Assinatura>): Promise<Assinatura> {
-    // criando um mock bem maroto da assinatura nova
+    // Criação de uma nova assinatura em memória
     const nova = new Assinatura(
       this.nextId++,
       assinatura.codPlano!,
       assinatura.codCli!,
       new Date(),
-      new Date(new Date().setFullYear(new Date().getFullYear() + 1)), // 1 ano de fidelidade
+      new Date(new Date().setFullYear(new Date().getFullYear() + 1)), // Define período de fidelidade de 1 ano
       new Date(),
       assinatura.custoFinal!,
       assinatura.descricao!,
@@ -26,7 +26,7 @@ export class AssinaturaRepository implements IAssinaturaRepository {
   }
 
   private mapearAssinatura(ass: Assinatura) {
-    // formatando os dados igual o prof pediu no postman
+    // Formatando os dados conforme o padrão esperado
     return {
       codigo_assinatura: ass.codigo,
       codigo_cliente: ass.codCli,
@@ -41,7 +41,7 @@ export class AssinaturaRepository implements IAssinaturaRepository {
     if (tipo === 'TODOS') {
       return this.assinaturas.map(this.mapearAssinatura);
     }
-    // filtrando os ativos/cancelados conforme o postman
+    // Filtrando assinaturas com base no status
     return this.assinaturas
       .filter(a => a.status === tipo)
       .map(this.mapearAssinatura);
@@ -60,7 +60,7 @@ export class AssinaturaRepository implements IAssinaturaRepository {
   }
 
   async salvar(assinatura: Assinatura): Promise<void> {
-    if(!assinatura.codigo) assinatura.codigo = this.nextId++;
+    if (!assinatura.codigo) assinatura.codigo = this.nextId++;
     this.assinaturas.push(assinatura);
   }
 }

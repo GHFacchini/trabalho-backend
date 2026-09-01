@@ -24,16 +24,16 @@ export class AppModule implements OnModuleInit {
     @Inject(IClienteRepository) private clienteRepo: IClienteRepository,
     @Inject(IPlanoRepository) private planoRepo: IPlanoRepository,
     @Inject(IAssinaturaRepository) private assinaturaRepo: IAssinaturaRepository,
-  ) {}
+  ) { }
 
   async onModuleInit() {
-    // populando nosso banco em memória (seeding maroto)
+    // Populando nosso banco em memória para fins de teste
     for (let i = 1; i <= 10; i++) {
       await this.clienteRepo.salvar(new Cliente(i, `Cliente ${i}`, `cliente${i}@email.com`));
     }
 
     for (let i = 1; i <= 5; i++) {
-      await this.planoRepo.salvar(new Plano(i, `Plano ${i}`, 50.0 + i*10, new Date(), `Descrição do Plano ${i}`));
+      await this.planoRepo.salvar(new Plano(i, `Plano ${i}`, 50.0 + i * 10, new Date(), `Descrição do Plano ${i}`));
     }
 
     for (let i = 1; i <= 5; i++) {
@@ -42,9 +42,9 @@ export class AppModule implements OnModuleInit {
         i, // codPlano
         i * 2, // codCli
         new Date(),
-        new Date(new Date().setFullYear(new Date().getFullYear() + 1)), // 1 ano de fidelidade
+        new Date(new Date().setFullYear(new Date().getFullYear() + 1)), // Define período de fidelidade de 1 ano
         new Date(),
-        50.0 + i*10,
+        50.0 + i * 10,
         `Assinatura seed ${i}`,
         'ATIVOS'
       );

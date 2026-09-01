@@ -5,12 +5,12 @@ import { IAssinaturaRepository } from '../../application/ports/assinatura.reposi
 
 @Controller('gerenciaplanos')
 export class GestaoController {
-  // injetando os repositórios aqui pra não acoplar a infra (Symbol é vida)
+  // Injeção de dependência para desacoplar a camada de infraestrutura
   constructor(
     @Inject(IClienteRepository) private clienteRepo: IClienteRepository,
     @Inject(IPlanoRepository) private planoRepo: IPlanoRepository,
     @Inject(IAssinaturaRepository) private assinaturaRepo: IAssinaturaRepository,
-  ) {}
+  ) { }
 
   @Get('clientes')
   async listarClientes() {
@@ -24,7 +24,7 @@ export class GestaoController {
 
   @Post('assinaturas')
   async criarAssinatura(@Body() body: any) {
-    // pegando os dados do postman: codCli, codPlano, custoFinal, descricao
+    // Recebe os dados do corpo da requisição: codCli, codPlano, custoFinal, descricao
     return this.assinaturaRepo.criar(body);
   }
 

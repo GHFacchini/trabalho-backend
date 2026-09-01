@@ -4,11 +4,11 @@ import { Cliente } from '../../domain/entities/cliente.entity.js';
 
 @Injectable()
 export class ClienteRepository implements IClienteRepository {
-  // banco de dados em memória, bem simples
+  // banco de dados em memória
   private clientes: Cliente[] = [];
 
   async listarTodos(): Promise<Cliente[]> {
-    // retornando todo mundo
+    // Retorna todos os clientes cadastrados
     return this.clientes;
   }
 
