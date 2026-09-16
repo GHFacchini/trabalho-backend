@@ -1,66 +1,90 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { IAssinaturaRepository } from '../../application/ports/assinatura.repository.interface.js';
 import { Assinatura } from '../../domain/entities/assinatura.entity.js';
+import { AssinaturaSchema } from '../database/schemas/assinatura.schema.js';
 
 @Injectable()
 export class AssinaturaRepository implements IAssinaturaRepository {
-  // Array simulando a persistência de assinaturas
-  private assinaturas: Assinatura[] = [];
-  private nextId = 1;
+  constructor(
+    @InjectRepository(AssinaturaSchema)
+    private readonly repo: Repository<AssinaturaSchema>,
+  ) {}
 
-  async criar(assinatura: Partial<Assinatura>): Promise<Assinatura> {
-    // Criação de uma nova assinatura em memória
-    const nova = new Assinatura(
-      this.nextId++,
-      assinatura.codPlano!,
-      assinatura.codCli!,
-      new Date(),
-      new Date(new Date().setFullYear(new Date().getFullYear() + 1)), // Define período de fidelidade de 1 ano
-      new Date(),
-      assinatura.custoFinal!,
-      assinatura.descricao!,
-      'ATIVOS'
+  // Converte schema ORM → entidade de domínio (com regra de negócio disponível)
+  private toDomain(schema: AssinaturaSchema): Assinatura {
+    return new Assinatura(
+      schema.codigo,
+      schema.codPlano,
+      schema.codCli,
+      schema.inicioFidelidade,
+      schema.fimFidelidade,
+      schema.dataUltimoPagamento,
+      schema.custoFinal,
+      schema.descricao,
     );
-    this.assinaturas.push(nova);
-    return nova;
   }
 
-  private mapearAssinatura(ass: Assinatura) {
-    // Formatando os dados conforme o padrão esperado
-    return {
-      codigo_assinatura: ass.codigo,
-      codigo_cliente: ass.codCli,
-      codigo_plano: ass.codPlano,
-      data_inicio: ass.inicioFidelidade,
-      data_fim: ass.fimFidelidade,
-      status: ass.status
-    };
+  async criar(dados: Partial<Assinatura>): Promise<Assinatura> {
+    const agora = new Date();
+    const fimFidelidade = new Date(agora.getTime());
+    // Período de fidelidade de 1 ano (365 dias) a partir da contratação
+    fimFidelidade.setFullYear(fimFidelidade.getFullYear() + 1);
+
+    const salvo = await this.repo.save({
+      codPlano: dados.codPlano!,
+      codCli: dados.codCli!,
+      inicioFidelidade: agora,
+      fimFidelidade,
+      // Registra como pago agora para garantir status ATIVO ao criar
+      dataUltimoPagamento: agora,
+      custoFinal: dados.custoFinal!,
+      descricao: dados.descricao!,
+    });
+    return this.toDomain(salvo);
   }
 
-  async listarPorTipo(tipo: 'TODOS' | 'ATIVOS' | 'CANCELADOS'): Promise<any[]> {
-    if (tipo === 'TODOS') {
-      return this.assinaturas.map(this.mapearAssinatura);
+  async listarTodas(): Promise<Assinatura[]> {
+    const schemas = await this.repo.find();
+    return schemas.map((s) => this.toDomain(s));
+  }
+
+  async listarPorCliente(codCli: number): Promise<Assinatura[]> {
+    const schemas = await this.repo.findBy({ codCli });
+    return schemas.map((s) => this.toDomain(s));
+  }
+
+  async listarPorPlano(codPlano: number): Promise<Assinatura[]> {
+    const schemas = await this.repo.findBy({ codPlano });
+    return schemas.map((s) => this.toDomain(s));
+  }
+
+  async buscarPorCodigo(codigo: number): Promise<Assinatura | null> {
+    const schema = await this.repo.findOneBy({ codigo });
+    return schema ? this.toDomain(schema) : null;
+  }
+
+  async atualizarUltimoPagamento(codigo: number, data: Date): Promise<void> {
+    const schema = await this.repo.findOneBy({ codigo });
+    if (!schema) {
+      throw new NotFoundException(`Assinatura ${codigo} não encontrada`);
     }
-    // Filtrando assinaturas com base no status
-    return this.assinaturas
-      .filter(a => a.status === tipo)
-      .map(this.mapearAssinatura);
+    schema.dataUltimoPagamento = data;
+    await this.repo.save(schema);
   }
 
-  async listarPorCliente(codcli: number): Promise<any[]> {
-    return this.assinaturas
-      .filter(a => a.codCli === Number(codcli))
-      .map(this.mapearAssinatura);
-  }
-
-  async listarPorPlano(codplano: number): Promise<any[]> {
-    return this.assinaturas
-      .filter(a => a.codPlano === Number(codplano))
-      .map(this.mapearAssinatura);
-  }
-
-  async salvar(assinatura: Assinatura): Promise<void> {
-    if (!assinatura.codigo) assinatura.codigo = this.nextId++;
-    this.assinaturas.push(assinatura);
+  async salvar(assinatura: Assinatura): Promise<Assinatura> {
+    const salvo = await this.repo.save({
+      codigo: assinatura.codigo || undefined,
+      codPlano: assinatura.codPlano,
+      codCli: assinatura.codCli,
+      inicioFidelidade: assinatura.inicioFidelidade,
+      fimFidelidade: assinatura.fimFidelidade,
+      dataUltimoPagamento: assinatura.dataUltimoPagamento,
+      custoFinal: assinatura.custoFinal,
+      descricao: assinatura.descricao,
+    });
+    return this.toDomain(salvo);
   }
 }
