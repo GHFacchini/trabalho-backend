@@ -1,3 +1,4 @@
+// Entidade de domínio pura do Cliente — sem dependências de framework
 export class Cliente {
   codigo: number;
   nome: string;

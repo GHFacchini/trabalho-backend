@@ -1,3 +1,4 @@
+// Entidade de domínio pura do Plano — sem dependências de framework
 export class Plano {
   codigo: number;
   nome: string;
