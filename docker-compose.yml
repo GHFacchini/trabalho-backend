@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672" # Painel de management
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  servico-gestao:
+    build: ./servico-gestao
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  servico-faturamento:
+    build: ./servico-faturamento
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  servico-planos-ativos:
+    build: ./servico-planos-ativos
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - SERVICO_GESTAO_URL=http://servico-gestao:3001
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      servico-gestao:
+        condition: service_started
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "3000:3000" # Porta única exposta para consumo
+    environment:
+      - PORT=3000
+      - SERVICO_GESTAO_URL=http://servico-gestao:3001
+      - SERVICO_FATURAMENTO_URL=http://servico-faturamento:3002
+      - SERVICO_PLANOS_ATIVOS_URL=http://servico-planos-ativos:3003
+    depends_on:
+      - servico-gestao
+      - servico-faturamento
+      - servico-planos-ativos

@@ -1,10 +1,11 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { IAssinaturaRepository, AssinaturaComStatus } from '../../ports/assinatura.repository.interface.js';
+import { Injectable, Inject, BadRequestException } from '@nestjs/common';
+import { IAssinaturaRepository } from '../../ports/assinatura.repository.interface.js';
+import type { AssinaturaComStatus } from '../../ports/assinatura.repository.interface.js';
 
-// Tipo de filtro aceito pela rota /assinaturas/:tipo
 export type TipoFiltroAssinatura = 'TODOS' | 'ATIVOS' | 'CANCELADOS';
 
-// Caso de uso: lista assinaturas filtradas por status (calculado via regra de negócio)
+const TIPOS_VALIDOS: TipoFiltroAssinatura[] = ['TODOS', 'ATIVOS', 'CANCELADOS'];
+
 @Injectable()
 export class ListarAssinaturasPorTipoUseCase {
   constructor(
@@ -12,10 +13,17 @@ export class ListarAssinaturasPorTipoUseCase {
     private readonly assinaturaRepo: IAssinaturaRepository,
   ) {}
 
-  async execute(tipo: TipoFiltroAssinatura): Promise<AssinaturaComStatus[]> {
+  async execute(tipo: string): Promise<AssinaturaComStatus[]> {
+    // Valida antes de qualquer coisa — evita retornar CANCELADOS pra qualquer valor inválido
+    if (!TIPOS_VALIDOS.includes(tipo as TipoFiltroAssinatura)) {
+      throw new BadRequestException(
+        `Tipo inválido: "${tipo}". Use TODOS, ATIVOS ou CANCELADOS.`,
+      );
+    }
+
     const todas = await this.assinaturaRepo.listarTodas();
 
-    // O status é calculado aqui, na camada de aplicação, usando a regra de negócio da entidade
+    // Status calculado aqui na camada de aplicação via regra de negócio da entidade
     const comStatus: AssinaturaComStatus[] = todas.map((ass) => ({
       codigo: ass.codigo,
       codPlano: ass.codPlano,

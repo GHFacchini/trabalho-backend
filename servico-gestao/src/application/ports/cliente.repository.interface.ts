@@ -1,10 +1,10 @@
 import { Cliente } from '../../domain/entities/cliente.entity.js';
 
-// Interface (porta de saída) que a camada de aplicação conhece
-// A infraestrutura implementa — a aplicação nunca depende diretamente do TypeORM
+// Porta de saída para o repositório de clientes
 export const IClienteRepository = Symbol('IClienteRepository');
 
 export interface IClienteRepository {
   listarTodos(): Promise<Cliente[]>;
+  buscarPorCodigo(codigo: number): Promise<Cliente | null>;
   salvar(cliente: Cliente): Promise<Cliente>;
 }

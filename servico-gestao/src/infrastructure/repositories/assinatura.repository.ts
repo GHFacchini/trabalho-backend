@@ -28,9 +28,9 @@ export class AssinaturaRepository implements IAssinaturaRepository {
 
   async criar(dados: Partial<Assinatura>): Promise<Assinatura> {
     const agora = new Date();
-    const fimFidelidade = new Date(agora.getTime());
-    // Período de fidelidade de 1 ano (365 dias) a partir da contratação
-    fimFidelidade.setFullYear(fimFidelidade.getFullYear() + 1);
+    const fimFidelidade = new Date(agora);
+    // 365 dias fixos — evita bug de ano bissexto com setFullYear
+    fimFidelidade.setDate(fimFidelidade.getDate() + 365);
 
     const salvo = await this.repo.save({
       codPlano: dados.codPlano!,
