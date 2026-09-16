@@ -14,7 +14,7 @@ export class ListarAssinaturasPorTipoUseCase {
   ) {}
 
   async execute(tipo: string): Promise<AssinaturaComStatus[]> {
-    // Valida antes de qualquer coisa — evita retornar CANCELADOS pra qualquer valor inválido
+    // valida antes de qualquer coisa pra nao retornar CANCELADOS com parametro errado
     if (!TIPOS_VALIDOS.includes(tipo as TipoFiltroAssinatura)) {
       throw new BadRequestException(
         `Tipo inválido: "${tipo}". Use TODOS, ATIVOS ou CANCELADOS.`,
@@ -23,7 +23,7 @@ export class ListarAssinaturasPorTipoUseCase {
 
     const todas = await this.assinaturaRepo.listarTodas();
 
-    // Status calculado aqui na camada de aplicação via regra de negócio da entidade
+    // o status e calculado aqui na camada de aplicacao usando a regra da entidade
     const comStatus: AssinaturaComStatus[] = todas.map((ass) => ({
       codigo: ass.codigo,
       codPlano: ass.codPlano,

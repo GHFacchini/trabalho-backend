@@ -20,14 +20,13 @@ export class RegistrarPagamentoUseCase {
   ) {}
 
   async execute(input: RegistrarPagamentoInput): Promise<Pagamento> {
-    // 1. Validação básica
+    // valida os dados de entrada
     if (input.dia < 1 || input.dia > 31) throw new BadRequestException('Dia inválido');
     if (input.mes < 1 || input.mes > 12) throw new BadRequestException('Mês inválido');
     if (input.ano < 2000) throw new BadRequestException('Ano inválido');
     if (!input.codAss || input.codAss <= 0) throw new BadRequestException('Código de assinatura inválido');
     if (!input.valorPago || input.valorPago <= 0) throw new BadRequestException('Valor pago deve ser positivo');
 
-    // 2. Persiste o pagamento no banco próprio do faturamento
     const pagamento = await this.pagamentoRepo.salvar(input);
 
     const evento = {
@@ -38,7 +37,7 @@ export class RegistrarPagamentoUseCase {
       valorPago: input.valorPago,
     };
 
-    // 3. Publica os eventos no RabbitMQ
+    // avisa os outros servicos que o pagamento foi feito,
     await this.rabbitMqPublisher.publish('pagamento.gestao', evento);
     await this.rabbitMqPublisher.publish('pagamento.planosativos', evento);
 

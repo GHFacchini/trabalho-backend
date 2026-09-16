@@ -22,19 +22,19 @@ export class GestaoController {
     private readonly verificarAssinaturaAtivaUseCase: VerificarAssinaturaAtivaUseCase,
   ) { }
 
-  // GET /gerenciaplanos/clientes
+
   @Get('clientes')
   async listarClientes() {
     return this.listarClientesUseCase.execute();
   }
 
-  // GET /gerenciaplanos/planos
+
   @Get('planos')
   async listarPlanos() {
     return this.listarPlanosUseCase.execute();
   }
 
-  // POST /gerenciaplanos/assinaturas
+
   @Post('assinaturas')
   @HttpCode(201)
   async criarAssinatura(
@@ -43,7 +43,7 @@ export class GestaoController {
     return this.criarAssinaturaUseCase.execute(body);
   }
 
-  // PATCH /gerenciaplanos/planos/:idPlano
+
   @Patch('planos/:idPlano')
   async atualizarCustoMensal(
     @Param('idPlano') idPlano: string,
@@ -55,27 +55,26 @@ export class GestaoController {
     });
   }
 
-  // GET /gerenciaplanos/assinaturas/:codass/ativa — endpoint interno para o ServicoPlanosAtivos
-  // Atenção: declarado ANTES de assinaturas/:tipo para evitar conflito de rota
+  // rota interna pro planos ativos q tem que ficar antes do :tipo senao da conflito de rota
   @Get('assinaturas/:codass/ativa')
   async verificarAtiva(@Param('codass') codass: string) {
     const ativa = await this.verificarAssinaturaAtivaUseCase.execute(Number(codass));
     return { ativa };
   }
 
-  // GET /gerenciaplanos/assinaturas/:tipo — TODOS | ATIVOS | CANCELADOS
+
   @Get('assinaturas/:tipo')
   async listarAssinaturas(@Param('tipo') tipo: string) {
     return this.listarAssinaturasPorTipoUseCase.execute(tipo);
   }
 
-  // GET /gerenciaplanos/asscli/:codcli
+
   @Get('asscli/:codcli')
   async listarAssinaturasPorCliente(@Param('codcli') codcli: string) {
     return this.listarAssinaturasPorClienteUseCase.execute(Number(codcli));
   }
 
-  // GET /gerenciaplanos/assinaturaplano/:codplano
+
   @Get('assinaturaplano/:codplano')
   async listarAssinaturasPorPlano(@Param('codplano') codplano: string) {
     return this.listarAssinaturasPorPlanoUseCase.execute(Number(codplano));

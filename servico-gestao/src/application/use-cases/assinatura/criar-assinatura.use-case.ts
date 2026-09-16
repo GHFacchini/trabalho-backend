@@ -24,13 +24,12 @@ export class CriarAssinaturaUseCase {
       throw new BadRequestException('custoFinal deve ser um número positivo');
     }
 
-    // Valida se o cliente existe antes de criar a assinatura
+    // verifica se o cliente existe
     const cliente = await this.clienteRepo.buscarPorCodigo(Number(input.codCli));
     if (!cliente) {
       throw new NotFoundException(`Cliente com código ${input.codCli} não encontrado`);
     }
 
-    // Valida se o plano existe
     const plano = await this.planoRepo.buscarPorCodigo(Number(input.codPlano));
     if (!plano) {
       throw new NotFoundException(`Plano com código ${input.codPlano} não encontrado`);

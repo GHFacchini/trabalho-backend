@@ -10,16 +10,14 @@ export class ConsultarPlanoAtivoUseCase {
   ) {}
 
   async execute(codAss: number): Promise<boolean> {
-    // 1. Tenta recuperar do cache
+    // tenta pegar do cache primeiro pra evitar chamada http desnecessaria
     const valorCache = this.cache.get(codAss);
     if (valorCache !== undefined) {
       return valorCache;
     }
 
-    // 2. Em caso de cache miss, consulta o servico-gestao via HTTP
     const ativo = await this.gestaoHttpClient.verificarAssinaturaAtiva(codAss);
 
-    // 3. Salva no cache
     this.cache.set(codAss, ativo);
 
     return ativo;
